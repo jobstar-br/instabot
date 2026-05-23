@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InstaBOT Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a38;
+    --accent: #7c5cfc;
+    --accent2: #e040fb;
+    --green: #00e676;
+    --red: #ff1744;
+    --yellow: #ffea00;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px;
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+  }
+  .logo {
+    padding: 28px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo h1 {
+    font-size: 18px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  .logo p { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .nav { padding: 16px 12px; flex: 1; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 8px;
+    cursor: pointer; font-size: 13px; font-weight: 500;
+    color: var(--muted); transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(124,92,252,0.15); color: var(--accent); }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  /* Login */
+  .login-screen {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 24px;
+  }
+  .login-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 40px; width: 360px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .login-box h2 { font-size: 22px; font-weight: 700; text-align: center; }
+  .login-box p { font-size: 13px; color: var(--muted); text-align: center; }
+
+  /* Main content */
+  .main {
+    margin-left: 240px;
+    flex: 1;
+    padding: 32px;
+    min-height: 100vh;
+  }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .page-header h2 { font-size: 22px; font-weight: 700; }
+  .page-header p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+  /* Stats */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .stat-card .label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card .value { font-size: 32px; font-weight: 700; margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
+  .stat-card .value.green { color: var(--green); }
+  .stat-card .value.purple { color: var(--accent); }
+  .stat-card .value.pink { color: var(--accent2); }
+  .stat-card .value.yellow { color: var(--yellow); }
+
+  /* Cards */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .card-header h3 { font-size: 15px; font-weight: 600; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  td { padding: 12px 12px; border-bottom: 1px solid rgba(42,42,56,0.5); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(124,92,252,0.03); }
+
+  /* Badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .badge.green { background: rgba(0,230,118,0.12); color: var(--green); }
+  .badge.red { background: rgba(255,23,68,0.12); color: var(--red); }
+  .badge.purple { background: rgba(124,92,252,0.12); color: var(--accent); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; transition: all 0.15s; font-family: inherit;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #6b4feb; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: rgba(255,23,68,0.1); color: var(--red); border: 1px solid rgba(255,23,68,0.2); }
+  .btn-danger:hover { background: rgba(255,23,68,0.2); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  /* Forms */
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+  input, textarea, select {
+    width: 100%; padding: 10px 14px; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 13px; font-family: inherit;
+    outline: none; transition: border 0.15s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; }
+  .toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .toggle input[type=checkbox] { width: auto; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; backdrop-filter: blur(4px);
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px; width: 500px; max-width: 95vw;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 24px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* Webhook box */
+  .webhook-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px; margin-top: 16px;
+  }
+  .webhook-box code {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--accent2); word-break: break-all;
+  }
+
+  /* Client selector */
+  .client-selector {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px; font-size: 13px;
+    color: var(--text); font-family: inherit; cursor: pointer;
+    outline: none; transition: border 0.15s;
+  }
+  .client-selector:focus { border-color: var(--accent); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 20px; font-size: 13px; font-weight: 500;
+    z-index: 200; transform: translateY(100px); opacity: 0;
+    transition: all 0.3s; max-width: 320px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-left: 3px solid var(--green); }
+  .toast.error { border-left: 3px solid var(--red); }
+
+  .empty-state {
+    text-align: center; padding: 48px; color: var(--muted);
+  }
+  .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-state p { font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-screen" style="width:100%">
+  <div class="login-box">
+    <div style="text-align:center;font-size:32px">🤖</div>
+    <h2>InstaBOT Platform</h2>
+    <p>Painel de automação Instagram</p>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="loginPassword" placeholder="Digite a senha..." onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="btn btn-primary" onclick="login()" style="width:100%;justify-content:center;padding:12px">
+      Entrar
+    </button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;width:100%">
+  <aside class="sidebar">
+    <div class="logo">
+      <h1>InstaBOT</h1>
+      <p>Plataforma de Automação</p>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+        <span class="icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('clients')" id="nav-clients">
+        <span class="icon">👥</span> Clientes
+      </div>
+      <div class="nav-item" onclick="showPage('flows')" id="nav-flows">
+        <span class="icon">⚡</span> Fluxos
+      </div>
+      <div class="nav-item" onclick="showPage('logs')" id="nav-logs">
+        <span class="icon">📨</span> Mensagens
+      </div>
+      <div class="nav-item" onclick="showPage('webhook')" id="nav-webhook">
+        <span class="icon">🔗</span> Webhook
+      </div>
+    </nav>
+    <div style="padding:16px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted)">Logado como admin</div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <h2>Dashboard</h2>
+          <p>Visão geral da plataforma</p>
+        </div>
+        <button class="btn btn-secondary" onclick="loadDashboard()">↺ Atualizar</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="label">Clientes Ativos</div><div class="value green" id="stat-clients">—</div></div>
+        <div class="stat-card"><div class="label">Msgs Recebidas</div><div class="value purple" id="stat-msgs">—</div></div>
+        <div class="stat-card"><div class="label">Fluxos Ativos</div><div class="value pink" id="stat-flows">—</div></div>
+        <div class="stat-card"><div class="label">Msgs Hoje</div><div class="value yellow" id="stat-today">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Resumo</h3></div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7">
+          Bem-vindo ao <strong style="color:var(--text)">InstaBOT Platform</strong>. Cadastre seus clientes na aba <strong style="color:var(--accent)">Clientes</strong>, 
+          crie fluxos de resposta automática em <strong style="color:var(--accent)">Fluxos</strong>, 
+          e configure o webhook do Instagram em <strong style="color:var(--accent)">Webhook</strong>.
+        </p>
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="page" id="page-clients">
+      <div class="page-header">
+        <div><h2>Clientes</h2><p>Gerencie os clientes da agência</p></div>
+        <button class="btn btn-primary" onclick="openClientModal()">+ Novo Cliente</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Nome</th><th>Page ID</th><th>IA</th><th>Status</th><th>Criado em</th><th>Ações</th></tr></thead>
+          <tbody id="clientsTable"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FLOWS -->
+    <div class="page" id="page-flows">
+      <div class="page-header">
+        <div><h2>Fluxos</h2><p>Gatilhos e respostas automáticas</p></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <select class="client-selector" id="flowClientSelect" onchange="loadFlows()">
+            <option value="">Selecione um cliente...</option>
+          </select>
+          <button class="btn btn-primary" onclick="openFlowModal()">+ Novo Fluxo</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Nome</th><th>Gatilhos</th><th>Resposta</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="flowsTable"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Selecione um cliente acima</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div class="page" id="page-logs">
+      <div class="page-header">
+        <div><h2>Mensagens</h2><p>Histórico de mensagens recebidas</p></div>
+        <select class="client-selector" id="logClientSelect" onchange="loadLogs()">
+          <option value="">Selecione um cliente...</option>
+        </select>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Horário</th><th>Sender ID</th><th>Dir.</th><th>Mensagem</th><th>Fluxo</th></tr></thead>
+          <tbody id="logsTable"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Selecione um cliente acima</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- WEBHOOK -->
+    <div class="page" id="page-webhook">
+      <div class="page-header">
+        <div><h2>Configuração Webhook</h2><p>Dados para configurar no Meta for Developers</p></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:16px;font-size:15px">🔗 URL do Webhook</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Cole esta URL no painel do seu app Meta:</p>
+        <div class="webhook-box">
+          <code id="webhookUrl">Carregando...</code>
+          <button class="btn btn-sm btn-secondary" onclick="copyWebhook('url')" style="margin-top:10px">📋 Copiar URL</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:16px;font-size:15px">🔑 Verify Token</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Use este token no campo "Verify Token" do Meta:</p>
+        <div class="webhook-box">
+          <code id="verifyToken">Carregando...</code>
+          <button class="btn btn-sm btn-secondary" onclick="copyWebhook('token')" style="margin-top:10px">📋 Copiar Token</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:16px;font-size:15px">📋 Passo a passo</h3>
+        <ol style="font-size:13px;color:var(--muted);line-height:2;padding-left:20px">
+          <li>Acesse <strong style="color:var(--text)">developers.facebook.com</strong></li>
+          <li>Crie ou acesse seu App > <strong style="color:var(--text)">Instagram</strong> > <strong style="color:var(--text)">Webhooks</strong></li>
+          <li>Adicione o Callback URL acima</li>
+          <li>Cole o Verify Token acima</li>
+          <li>Inscreva nos eventos: <strong style="color:var(--accent)">messages</strong></li>
+          <li>Cadastre o cliente aqui com o Page ID e Access Token do Instagram</li>
+        </ol>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-overlay hidden" id="clientModal">
+  <div class="modal">
+    <h3 id="clientModalTitle">Novo Cliente</h3>
+    <input type="hidden" id="clientId">
+    <div class="form-group"><label>Nome do Cliente</label><input id="clientName" placeholder="Ex: Loja da Maria"></div>
+    <div class="form-group"><label>Instagram Page ID</label><input id="clientPageId" placeholder="Ex: 12345678901234"></div>
+    <div class="form-group"><label>Access Token</label><input id="clientToken" type="password" placeholder="EAAB..."></div>
+    <div class="form-group"><label>Prompt da IA</label><textarea id="clientPrompt" placeholder="Você é um atendente simpático da [Nome da Loja]. Responda dúvidas sobre produtos e horários de forma breve."></textarea></div>
+    <div class="form-group">
+      <label class="toggle">
+        <input type="checkbox" id="clientAI" checked>
+        Habilitar IA (fallback automático quando nenhum fluxo responder)
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('clientModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveClient()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FLUXO -->
+<div class="modal-overlay hidden" id="flowModal">
+  <div class="modal">
+    <h3 id="flowModalTitle">Novo Fluxo</h3>
+    <input type="hidden" id="flowId">
+    <div class="form-group"><label>Nome do Fluxo</label><input id="flowName" placeholder="Ex: Boas-vindas"></div>
+    <div class="form-group">
+      <label>Palavras-chave (gatilhos)</label>
+      <input id="flowKeyword" placeholder="Ex: oi, olá, bom dia">
+      <p style="font-size:11px;color:var(--muted);margin-top:5px">Separe múltiplos gatilhos com vírgula. A mensagem do usuário deve conter qualquer uma delas.</p>
+    </div>
+    <div class="form-group">
+      <label>Mensagem de Resposta</label>
+      <textarea id="flowResponse" placeholder="Ex: Olá! 👋 Seja bem-vindo! Como posso te ajudar hoje?" style="min-height:120px"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('flowModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFlow()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let token = localStorage.getItem('admin_token') || '';
+let clients = [];
+
+// ---- Auth ----
+async function login() {
+  const pw = document.getElementById('loginPassword').value;
+  const res = await fetch('/api/stats', { headers: { 'x-admin-token': pw } });
+  if (res.ok) {
+    token = pw;
+    localStorage.setItem('admin_token', token);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    init();
+  } else {
+    showToast('Senha incorreta', 'error');
+  }
+}
+
+async function init() {
+  await loadClients();
+  loadDashboard();
+  loadWebhookInfo();
+}
+
+// ---- API ----
+async function api(url, method = 'GET', body = null) {
+  const opts = { method, headers: { 'x-admin-token': token, 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch('/api' + url, opts);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// ---- Dashboard ----
+async function loadDashboard() {
+  try {
+    const s = await api('/stats');
+    document.getElementById('stat-clients').textContent = s.totalClients;
+    document.getElementById('stat-msgs').textContent = s.totalMessages;
+    document.getElementById('stat-flows').textContent = s.totalFlows;
+    document.getElementById('stat-today').textContent = s.todayMessages;
+  } catch(e) { console.error(e); }
+}
+
+// ---- Clients ----
+async function loadClients() {
+  clients = await api('/clients');
+  renderClients();
+  updateSelectors();
+}
+
+function renderClients() {
+  const tb = document.getElementById('clientsTable');
+  if (!clients.length) { tb.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">👥</div><p>Nenhum cliente cadastrado ainda</p></div></td></tr>'; return; }
+  tb.innerHTML = clients.map(c => `
+    <tr>
+      <td><strong>${c.name}</strong></td>
+      <td><code style="font-family:monospace;font-size:11px;color:var(--muted)">${c.instagram_page_id}</code></td>
+      <td><span class="badge ${c.ai_enabled ? 'green' : 'red'}">${c.ai_enabled ? '✓ Ativa' : '✗ Off'}</span></td>
+      <td><span class="badge ${c.active ? 'green' : 'red'}">${c.active ? '● Ativo' : '○ Inativo'}</span></td>
+      <td style="color:var(--muted);font-size:12px">${new Date(c.created_at).toLocaleDateString('pt-BR')}</td>
+      <td>
+        <button class="btn btn-sm btn-secondary" onclick="editClient('${c.id}')">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteClient('${c.id}','${c.name}')">🗑️</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function updateSelectors() {
+  const options = '<option value="">Selecione um cliente...</option>' + clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('flowClientSelect').innerHTML = options;
+  document.getElementById('logClientSelect').innerHTML = options;
+}
+
+function openClientModal(c = null) {
+  document.getElementById('clientId').value = c?.id || '';
+  document.getElementById('clientModalTitle').textContent = c ? 'Editar Cliente' : 'Novo Cliente';
+  document.getElementById('clientName').value = c?.name || '';
+  document.getElementById('clientPageId').value = c?.instagram_page_id || '';
+  document.getElementById('clientToken').value = '';
+  document.getElementById('clientPrompt').value = c?.ai_prompt || 'Você é um atendente simpático. Responda de forma curta e útil.';
+  document.getElementById('clientAI').checked = c ? !!c.ai_enabled : true;
+  document.getElementById('clientModal').classList.remove('hidden');
+}
+
+function editClient(id) { openClientModal(clients.find(c => c.id === id)); }
+
+async function saveClient() {
+  const id = document.getElementById('clientId').value;
+  const body = {
+    name: document.getElementById('clientName').value,
+    instagram_page_id: document.getElementById('clientPageId').value,
+    access_token: document.getElementById('clientToken').value,
+    ai_prompt: document.getElementById('clientPrompt').value,
+    ai_enabled: document.getElementById('clientAI').checked,
+    active: true
+  };
+  try {
+    if (id) await api(`/clients/${id}`, 'PUT', body);
+    else await api('/clients', 'POST', body);
+    closeModal('clientModal');
+    await loadClients();
+    loadDashboard();
+    showToast('Cliente salvo com sucesso!', 'success');
+  } catch(e) { showToast('Erro: ' + e.message, 'error'); }
+}
+
+async function deleteClient(id, name) {
+  if (!confirm(`Remover cliente "${name}"? Todos os fluxos serão excluídos.`)) return;
+  await api(`/clients/${id}`, 'DELETE');
+  await loadClients();
+  loadDashboard();
+  showToast('Cliente removido', 'success');
+}
+
+// ---- Flows ----
+async function loadFlows() {
+  const clientId = document.getElementById('flowClientSelect').value;
+  if (!clientId) return;
+  const flows = await api(`/clients/${clientId}/flows`);
+  const tb = document.getElementById('flowsTable');
+  if (!flows.length) { tb.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon">⚡</div><p>Nenhum fluxo criado. Crie o primeiro acima!</p></div></td></tr>'; return; }
+  tb.innerHTML = flows.map(f => `
+    <tr>
+      <td><strong>${f.name}</strong></td>
+      <td>${f.trigger_keyword.split(',').map(k => `<span class="badge purple" style="margin:1px">${k.trim()}</span>`).join(' ')}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:12px">${f.response_message}</td>
+      <td><span class="badge ${f.active ? 'green' : 'red'}">${f.active ? '● Ativo' : '○ Off'}</span></td>
+      <td>
+        <button class="btn btn-sm btn-secondary" onclick="editFlow(${JSON.stringify(f).replace(/"/g,'&quot;')})">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteFlow('${f.id}')">🗑️</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openFlowModal(f = null) {
+  const clientId = document.getElementById('flowClientSelect').value;
+  if (!clientId) { showToast('Selecione um cliente primeiro', 'error'); return; }
+  document.getElementById('flowId').value = f?.id || '';
+  document.getElementById('flowModalTitle').textContent = f ? 'Editar Fluxo' : 'Novo Fluxo';
+  document.getElementById('flowName').value = f?.name || '';
+  document.getElementById('flowKeyword').value = f?.trigger_keyword || '';
+  document.getElementById('flowResponse').value = f?.response_message || '';
+  document.getElementById('flowModal').classList.remove('hidden');
+}
+
+function editFlow(f) { openFlowModal(f); }
+
+async function saveFlow() {
+  const id = document.getElementById('flowId').value;
+  const clientId = document.getElementById('flowClientSelect').value;
+  const body = {
+    name: document.getElementById('flowName').value,
+    trigger_keyword: document.getElementById('flowKeyword').value,
+    response_message: document.getElementById('flowResponse').value,
+    active: true
+  };
+  try {
+    if (id) await api(`/flows/${id}`, 'PUT', body);
+    else await api(`/clients/${clientId}/flows`, 'POST', body);
+    closeModal('flowModal');
+    loadFlows();
+    loadDashboard();
+    showToast('Fluxo salvo!', 'success');
+  } catch(e) { showToast('Erro: ' + e.message, 'error'); }
+}
+
+async function deleteFlow(id) {
+  if (!confirm('Remover este fluxo?')) return;
+  await api(`/flows/${id}`, 'DELETE');
+  loadFlows();
+  showToast('Fluxo removido', 'success');
+}
+
+// ---- Logs ----
+async function loadLogs() {
+  const clientId = document.getElementById('logClientSelect').value;
+  if (!clientId) return;
+  const logs = await api(`/clients/${clientId}/logs`);
+  const tb = document.getElementById('logsTable');
+  if (!logs.length) { tb.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon">📭</div><p>Nenhuma mensagem registrada ainda</p></div></td></tr>'; return; }
+  tb.innerHTML = logs.map(l => `
+    <tr>
+      <td style="font-size:11px;color:var(--muted);font-family:monospace">${new Date(l.created_at).toLocaleString('pt-BR')}</td>
+      <td style="font-size:11px;font-family:monospace;color:var(--muted)">${l.sender_id.substring(0,12)}...</td>
+      <td><span class="badge ${l.direction==='in'?'purple':'green'}">${l.direction==='in'?'← recebida':'→ enviada'}</span></td>
+      <td style="font-size:12px;max-width:250px">${l.message}</td>
+      <td style="font-size:11px;color:var(--muted)">${l.flow_triggered || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ---- Webhook ----
+async function loadWebhookInfo() {
+  try {
+    const info = await api('/webhook-url');
+    document.getElementById('webhookUrl').textContent = info.webhook_url;
+    document.getElementById('verifyToken').textContent = info.verify_token;
+  } catch(e) {}
+}
+
+function copyWebhook(type) {
+  const text = type === 'url' ? document.getElementById('webhookUrl').textContent : document.getElementById('verifyToken').textContent;
+  navigator.clipboard.writeText(text);
+  showToast('Copiado!', 'success');
+}
+
+// ---- Utils ----
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'webhook') loadWebhookInfo();
+}
+
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Auto-login se já tiver token
+if (token) {
+  fetch('/api/stats', { headers: { 'x-admin-token': token } }).then(r => {
+    if (r.ok) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      init();
+    }
+  });
+}
+</script>
+</body>
+</html>

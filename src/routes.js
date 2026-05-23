@@ -76,7 +76,7 @@ router.delete('/flows/:id', auth, (req, res) => {
 
 router.get('/stats', auth, (req, res) => {
   const totalClients = db.prepare('SELECT COUNT(*) as c FROM clients WHERE active=1').get().c;
-  const totalMessages = db.prepare('SELECT COUNT(*) as c FROM messages_log WHERE direction="in"').get().c;
+  const totalMessages = db.prepare('SELECT COUNT(*) as c FROM messages_log WHERE direction=?').get('in').c;
   const totalFlows = db.prepare('SELECT COUNT(*) as c FROM flows WHERE active=1').get().c;
   const todayMessages = db.prepare("SELECT COUNT(*) as c FROM messages_log WHERE direction=? AND date(created_at)=date('now')").get('in').c;
 
